@@ -1,39 +1,34 @@
 import math
+import re
 from queue import PriorityQueue
 from heuristics import *
 
 
-def change_Position(puzzle, direction, size):
-    pos = 0
-    for i in range(len(puzzle)):
-        if puzzle[i] == 0:
-            pos = i
-    if direction == 'up':
+def change_Position(puzzle, move, size):
+    pos = puzzle.index(0) ## Find position of zero
+    if move == 'up':
         puzzle[pos], puzzle[pos - size] = puzzle[pos - size], puzzle[pos]
-    if direction == 'down':
+    if move == 'down':
         puzzle[pos], puzzle[pos + size] = puzzle[pos + size], puzzle[pos]
-    if direction == 'right':
+    if move == 'right':
         puzzle[pos], puzzle[pos + 1] = puzzle[pos + 1], puzzle[pos]
-    if direction == 'left':
+    if move == 'left':
         puzzle[pos], puzzle[pos - 1] = puzzle[pos - 1], puzzle[pos]
     return puzzle
 
 
 def position_Valid(puzzle, size):
-    up = down = right = left = 1
-    pos = 0
-    for i in range(len(puzzle)):
-        if puzzle[i] == 0:
-            pos = i
-    if pos < size:
-        up = 0
-    if pos >= len(puzzle) - size:
-        down = 0
-    if pos % size == 0:
-        left = 0
-    if (pos + 1) % size == 0 and pos != 0:
-        right = 0
-    return up, down, left, right
+    pos = puzzle.index(0)
+    moves = []
+    if not pos < size:
+        moves.append("up")
+    if not pos >= len(puzzle) - size:
+        moves.append("down")
+    if not pos % size == 0:
+        moves.append("left")
+    if not (pos + 1) % size == 0 and pos != 0:
+        moves.append("right")
+    return moves
 
 
 def spiral(n):
@@ -77,9 +72,9 @@ def heuristics(puzzle, opt, size):
         return hamming_Distance(puzzle, opt, size)
 
 
-def compute_Position(move, puzzle, test_list, opt, used_list, size, cost, selected):
+def compute_Position(move, puzzle, test_list, opt, visited, size, cost, selected):
     puzzle_new = change_Position(puzzle.copy(), move, size)
-    if tuple(puzzle_new) in used_list:
+    if tuple(puzzle_new) in visited:
         return test_list, selected
     if ALGORITHM == "a*":
         dist_new = heuristics(puzzle_new, opt, size) * math.log(size) * size + cost
@@ -107,33 +102,22 @@ def find_path(puzzle, path):
 
 def solver(puzzle, opt, size):
     path = []
-    used_list = set()
+    visited = set()
     test_list = PriorityQueue()
     test_list.put((0, puzzle, puzzle, 0))
     complexity = 0
     selected = 0
-    while not test_list.empty():
+    while puzzle != list(opt):
         complexity += 1
         dist, puzzle, parent, cost = test_list.get()
-        used_list.add(tuple(puzzle))
+        visited.add(tuple(puzzle))
         path.append((puzzle, parent, dist))
-        if puzzle == list(opt):
-            path = find_path(puzzle, path)
-            path.append(list(opt))
-            break;
-        up, down, left, right = position_Valid(puzzle, size)
-        if up == 1:
-            test_list, selected = compute_Position('up', puzzle, test_list, opt, used_list, size, cost,
+        moves = position_Valid(puzzle, size)
+        for move in moves:
+            test_list, selected = compute_Position(move, puzzle, test_list, opt, visited, size, cost,
                                                    selected)
-        if down == 1:
-            test_list, selected = compute_Position('down', puzzle, test_list, opt, used_list, size, cost,
-                                                   selected)
-        if left == 1:
-            test_list, selected = compute_Position('left', puzzle, test_list, opt, used_list, size, cost,
-                                                   selected)
-        if right == 1:
-            test_list, selected = compute_Position('right', puzzle, test_list, opt, used_list, size, cost,
-                                                   selected)
+    path = find_path(puzzle, path)
+    path.append(list(opt))
     return path, complexity, selected
 
 
@@ -148,8 +132,10 @@ def algorithm(puzzle, is_linear, is_verbose, heuristic, algorithm):
     opt = np.roll(np.arange(size ** 2), -1) if is_linear else spiral(size)
     path, complexity, selected = solver(puzzle, opt, size)
     if is_verbose:
-        [print(route.reshape(size, size)) for route in np.array(path)]
-        print('Number of moves :', len(path))
+        for route in np.array(path):
+            a = str(route.reshape(size, size))
+            print("", re.sub('[\[\]]', '', str(a[1:])), "\n")
+        print('\nNumber of moves :', len(path))
     else:
         print(np.array(path[len(path) - 1]).reshape(size, size))
     print('Complexity in time :', complexity)

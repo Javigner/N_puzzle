@@ -1,5 +1,5 @@
 import argparse
-from algo import algorithm
+from algorithm import algorithm
 from parsing import parse_file
 
 
@@ -8,12 +8,13 @@ def parse_args():
     parser.add_argument("-f", "--file", type=str, required=True,
                         help="path of n-puzzle file")
     parser.add_argument("-l", "--linear", action="store_true",
-                        help="increase output verbosity")
+                        help="resolve N-Puzzle lineary")
     parser.add_argument("-he", "--heuristic", choices=["euclidian", "square_euclidian", "manhattan", "gaschnig", "linear_conflict", "hamming"], default="manhattan",
-                        help="increase output verbosity")
+                        help="heuristic function used Default: manhattan")
     parser.add_argument("-a", "--algorithm", choices=["a*", "greedy", "uniform cost"], default="a*",
-                        help="increase output verbosity")
-    parser.add_argument("-v", "--verbose", action="store_true")
+                        help="search algorithm used Default: a*")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help='display path to final puzzle')
     return parser.parse_args()
 
 

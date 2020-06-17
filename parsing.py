@@ -1,7 +1,6 @@
 import sys
 import math
 import numpy as np
-from commun import spiral_traversal
 
 
 def error(filename):
@@ -44,6 +43,14 @@ def parse_puzzle(puzzle2d):
     if not len(puzzle1d) == len(set(puzzle1d)):  # check if there is duplicate number
         return
     return puzzle1d
+
+
+def spiral_traversal(matrix):
+    res = []
+    while matrix.size:
+        res.append(matrix[0])  # take first row
+        matrix = matrix[1:].T[::-1]  # cut off first row and rotate counterclockwise
+    return np.concatenate(res)
 
 
 def cost_of_inversion(puzzle):
